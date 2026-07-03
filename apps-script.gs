@@ -36,6 +36,19 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
 }
 
+function doGet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ensureRawSheet_(ss);
+  rebuildSummary_(ss);
+  return ContentService.createTextOutput('Resumen actualizado desde Respuestas_RAW').setMimeType(ContentService.MimeType.TEXT);
+}
+
+function setupNow() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ensureRawSheet_(ss);
+  rebuildSummary_(ss);
+}
+
 function appendRawResponse_(ss, data) {
   const sheet = ensureRawSheet_(ss);
   const row = [new Date(), data.personaje || '', data.actor || actorFor_(data.personaje), data.comentarios || ''];
@@ -65,21 +78,26 @@ function rebuildSummary_(ss) {
   if (!summary) summary = ss.insertSheet(SUMMARY_SHEET_NAME);
   summary.clear();
   summary.getRange(1, 1, summary.getMaxRows(), summary.getMaxColumns()).breakApart();
+
   const rawValues = raw.getDataRange().getValues();
   const latestByPersonaje = {};
+
   for (let i = 1; i < rawValues.length; i++) {
     const row = rawValues[i];
     const personaje = row[1];
     if (personaje) latestByPersonaje[personaje] = row;
   }
+
   const actorHeaders = PERSONAJES.map(function(p) { return p.personaje + ' — ' + p.actor; });
   const table = [];
   table.push(['Fecha', 'Ensayo'].concat(actorHeaders).concat(['Pueden', 'No pueden', 'Pendientes']));
+
   ENSAYOS.forEach(function(ensayo, ensayoIndex) {
     let pueden = 0;
     let noPueden = 0;
     let pendientes = 0;
     const row = [ensayo.fecha, ensayo.actividad];
+
     PERSONAJES.forEach(function(p) {
       if (ensayo.para.indexOf(p.personaje) === -1) {
         row.push('—');
@@ -98,15 +116,18 @@ function rebuildSummary_(ss) {
         row.push('Pendiente');
       }
     });
+
     row.push(pueden, noPueden, pendientes);
     table.push(row);
   });
+
   const totalColumns = table[0].length;
   summary.getRange(1, 1, 1, totalColumns).merge();
   summary.getRange(1, 1).setValue('Resumen disponibilidad ensayos — Jona').setFontSize(18).setFontWeight('bold').setFontColor('#ffffff').setBackground('#24584d');
   summary.getRange(2, 1, 1, totalColumns).merge();
-  summary.getRange(2, 1).setValue('Actualizado: ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')).setFontStyle('italic').setFontColor('#607068');
+  summary.getRange(2, 1).setValue('Actualizado desde Respuestas_RAW: ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')).setFontStyle('italic').setFontColor('#607068');
   summary.getRange(4, 1, table.length, totalColumns).setValues(table);
+
   const backgrounds = table.map(function(row, rowIndex) {
     return row.map(function(cell) {
       if (rowIndex === 0) return '#24584d';
@@ -117,6 +138,7 @@ function rebuildSummary_(ss) {
       return '#fffdf8';
     });
   });
+
   summary.getRange(4, 1, table.length, totalColumns).setBackgrounds(backgrounds).setWrap(true).setVerticalAlignment('middle');
   summary.getRange(4, 1, 1, totalColumns).setFontWeight('bold').setFontColor('#ffffff');
   summary.getRange(5, 3, table.length - 1, PERSONAJES.length).setHorizontalAlignment('center');
@@ -126,6 +148,7 @@ function rebuildSummary_(ss) {
   summary.setColumnWidth(1, 150);
   summary.setColumnWidth(2, 360);
   for (let c = 3; c <= totalColumns; c++) summary.setColumnWidth(c, 130);
+
   ss.setActiveSheet(summary);
   ss.moveActiveSheet(1);
   const rawSheet = ss.getSheetByName(RAW_SHEET_NAME);
