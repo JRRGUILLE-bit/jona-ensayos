@@ -29,10 +29,18 @@ const ENSAYOS = [
 ];
 
 function doPost(e) {
-  const data = JSON.parse((e && e.postData && e.postData.contents) || '{}');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  if (!e || !e.postData || !e.postData.contents) {
+    ensureRawSheet_(ss);
+    rebuildSummary_(ss);
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, mode: 'setup' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const data = JSON.parse(e.postData.contents || '{}');
   appendRawResponse_(ss, data);
   rebuildSummary_(ss);
+
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -49,13 +57,23 @@ function setupNow() {
   rebuildSummary_(ss);
 }
 
+function onEdit(e) {
+  if (!e || !e.range) return;
+  const sheet = e.range.getSheet();
+  if (sheet.getName() === RAW_SHEET_NAME && e.range.getRow() > 1) {
+    rebuildSummary_(SpreadsheetApp.getActiveSpreadsheet());
+  }
+}
+
 function appendRawResponse_(ss, data) {
   const sheet = ensureRawSheet_(ss);
   const row = [new Date(), data.personaje || '', data.actor || actorFor_(data.personaje), data.comentarios || ''];
+
   ENSAYOS.forEach(function(ensayo) {
     const respuesta = data.respuestas && data.respuestas[ensayo.id] && data.respuestas[ensayo.id].respuesta ? data.respuestas[ensayo.id].respuesta : '';
     row.push(respuesta);
   });
+
   sheet.appendRow(row);
   sheet.autoResizeColumns(1, row.length);
 }
@@ -63,12 +81,17 @@ function appendRawResponse_(ss, data) {
 function ensureRawSheet_(ss) {
   let sheet = ss.getSheetByName(RAW_SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(RAW_SHEET_NAME);
+
   if (sheet.getLastRow() === 0) {
-    const headers = ['Timestamp', 'Personaje', 'Actor/a', 'Comentarios'].concat(ENSAYOS.map(function(ensayo) { return ensayo.fecha + ' — ' + ensayo.actividad; }));
+    const headers = ['Timestamp', 'Personaje', 'Actor/a', 'Comentarios'].concat(ENSAYOS.map(function(ensayo) {
+      return ensayo.fecha + ' — ' + ensayo.actividad;
+    }));
+
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#24584d').setFontColor('#ffffff');
   }
+
   return sheet;
 }
 
@@ -76,6 +99,7 @@ function rebuildSummary_(ss) {
   const raw = ensureRawSheet_(ss);
   let summary = ss.getSheetByName(SUMMARY_SHEET_NAME);
   if (!summary) summary = ss.insertSheet(SUMMARY_SHEET_NAME);
+
   summary.clear();
   summary.getRange(1, 1, summary.getMaxRows(), summary.getMaxColumns()).breakApart();
 
@@ -88,7 +112,10 @@ function rebuildSummary_(ss) {
     if (personaje) latestByPersonaje[personaje] = row;
   }
 
-  const actorHeaders = PERSONAJES.map(function(p) { return p.personaje + ' — ' + p.actor; });
+  const actorHeaders = PERSONAJES.map(function(p) {
+    return p.personaje + ' — ' + p.actor;
+  });
+
   const table = [];
   table.push(['Fecha', 'Ensayo'].concat(actorHeaders).concat(['Pueden', 'No pueden', 'Pendientes']));
 
@@ -103,8 +130,10 @@ function rebuildSummary_(ss) {
         row.push('—');
         return;
       }
+
       const rawRow = latestByPersonaje[p.personaje];
       const value = rawRow ? rawRow[4 + ensayoIndex] : '';
+
       if (value === 'Puedo') {
         pueden++;
         row.push('Puedo');
@@ -122,10 +151,11 @@ function rebuildSummary_(ss) {
   });
 
   const totalColumns = table[0].length;
-  summary.getRange(1, 1, 1, totalColumns).merge();
+
   summary.getRange(1, 1).setValue('Resumen disponibilidad ensayos — Jona').setFontSize(18).setFontWeight('bold').setFontColor('#ffffff').setBackground('#24584d');
-  summary.getRange(2, 1, 1, totalColumns).merge();
+  summary.getRange(1, 1, 1, totalColumns).setBackground('#24584d');
   summary.getRange(2, 1).setValue('Actualizado desde Respuestas_RAW: ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm')).setFontStyle('italic').setFontColor('#607068');
+
   summary.getRange(4, 1, table.length, totalColumns).setValues(table);
 
   const backgrounds = table.map(function(row, rowIndex) {
@@ -143,23 +173,32 @@ function rebuildSummary_(ss) {
   summary.getRange(4, 1, 1, totalColumns).setFontWeight('bold').setFontColor('#ffffff');
   summary.getRange(5, 3, table.length - 1, PERSONAJES.length).setHorizontalAlignment('center');
   summary.getRange(5, totalColumns - 2, table.length - 1, 3).setHorizontalAlignment('center').setFontWeight('bold');
+
   summary.setFrozenRows(4);
   summary.setFrozenColumns(2);
   summary.setColumnWidth(1, 150);
   summary.setColumnWidth(2, 360);
-  for (let c = 3; c <= totalColumns; c++) summary.setColumnWidth(c, 130);
+
+  for (let c = 3; c <= totalColumns; c++) {
+    summary.setColumnWidth(c, 130);
+  }
 
   ss.setActiveSheet(summary);
   ss.moveActiveSheet(1);
+
   const rawSheet = ss.getSheetByName(RAW_SHEET_NAME);
   if (rawSheet) {
     ss.setActiveSheet(rawSheet);
     ss.moveActiveSheet(2);
   }
+
   ss.setActiveSheet(summary);
 }
 
 function actorFor_(personaje) {
-  const found = PERSONAJES.find(function(p) { return p.personaje === personaje; });
+  const found = PERSONAJES.find(function(p) {
+    return p.personaje === personaje;
+  });
+
   return found ? found.actor : '';
 }
