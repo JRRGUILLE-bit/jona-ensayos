@@ -94,8 +94,9 @@ function appendRawResponse_(ss, data) {
   const row = [new Date(), data.personaje || '', data.actor || actorFor_(data.personaje), data.comentarios || ''];
 
   ENSAYOS.forEach(function(ensayo) {
-    const respuesta = data.respuestas && data.respuestas[ensayo.id] && data.respuestas[ensayo.id].respuesta ? data.respuestas[ensayo.id].respuesta : '';
-    row.push(respuesta);
+    const item = data.respuestas && data.respuestas[ensayo.id] ? data.respuestas[ensayo.id] : {};
+    row.push(item.respuesta || '');
+    row.push(item.comentario || item.comentarios || '');
   });
 
   sheet.appendRow(row);
@@ -107,16 +108,57 @@ function ensureRawSheet_(ss) {
   if (!sheet) sheet = ss.insertSheet(RAW_SHEET_NAME);
 
   if (sheet.getLastRow() === 0) {
-    const headers = ['Timestamp', 'Personaje', 'Actor/a', 'Comentarios'].concat(ENSAYOS.map(function(ensayo) {
-      return ensayo.fecha + ' — ' + ensayo.actividad;
-    }));
-
+    const headers = rawHeadersV2_();
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#24584d').setFontColor('#ffffff');
+    return sheet;
+  }
+
+  const headerValues = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0];
+  const hasPerEnsayoComments = headerValues.some(function(value) {
+    return String(value).indexOf('COMENTARIO —') === 0;
+  });
+
+  if (!hasPerEnsayoComments) {
+    migrateRawSheetToPerEnsayoComments_(sheet);
   }
 
   return sheet;
+}
+
+function rawHeadersV2_() {
+  const headers = ['Timestamp', 'Personaje', 'Actor/a', 'Comentarios generales'];
+
+  ENSAYOS.forEach(function(ensayo) {
+    headers.push('RESPUESTA — ' + ensayo.fecha + ' — ' + ensayo.actividad);
+    headers.push('COMENTARIO — ' + ensayo.fecha + ' — ' + ensayo.actividad);
+  });
+
+  return headers;
+}
+
+function migrateRawSheetToPerEnsayoComments_(sheet) {
+  const values = sheet.getDataRange().getValues();
+  const headers = rawHeadersV2_();
+  const migrated = [headers];
+
+  for (let i = 1; i < values.length; i++) {
+    const oldRow = values[i];
+    const newRow = [oldRow[0] || '', oldRow[1] || '', oldRow[2] || '', oldRow[3] || ''];
+
+    ENSAYOS.forEach(function(ensayo, ensayoIndex) {
+      newRow.push(oldRow[4 + ensayoIndex] || '');
+      newRow.push('');
+    });
+
+    migrated.push(newRow);
+  }
+
+  sheet.clear();
+  sheet.getRange(1, 1, migrated.length, headers.length).setValues(migrated);
+  sheet.setFrozenRows(1);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#24584d').setFontColor('#ffffff');
 }
 
 function rebuildSummary_(ss) {
@@ -156,17 +198,19 @@ function rebuildSummary_(ss) {
       }
 
       const rawRow = latestByPersonaje[p.personaje];
-      const value = rawRow ? rawRow[4 + ensayoIndex] : '';
+      const respuesta = rawRow ? String(rawRow[4 + ensayoIndex * 2] || '') : '';
+      const comentario = rawRow ? String(rawRow[5 + ensayoIndex * 2] || '') : '';
+      const visibleValue = comentario ? respuesta + '\n' + comentario : respuesta;
 
-      if (value === 'Puedo') {
+      if (respuesta === 'Puedo') {
         pueden++;
-        row.push('Puedo');
-      } else if (value === 'No puedo') {
+        row.push(visibleValue || 'Puedo');
+      } else if (respuesta === 'No puedo') {
         noPueden++;
-        row.push('No puedo');
+        row.push(visibleValue || 'No puedo');
       } else {
         pendientes++;
-        row.push('Pendiente');
+        row.push(comentario ? 'Pendiente\n' + comentario : 'Pendiente');
       }
     });
 
@@ -184,11 +228,12 @@ function rebuildSummary_(ss) {
 
   const backgrounds = table.map(function(row, rowIndex) {
     return row.map(function(cell) {
+      const text = String(cell || '');
       if (rowIndex === 0) return '#24584d';
-      if (cell === 'Puedo') return '#d9ead3';
-      if (cell === 'No puedo') return '#f4cccc';
-      if (cell === 'Pendiente') return '#fff2cc';
-      if (cell === '—') return '#eeeeee';
+      if (text.indexOf('Puedo') === 0) return '#d9ead3';
+      if (text.indexOf('No puedo') === 0) return '#f4cccc';
+      if (text.indexOf('Pendiente') === 0) return '#fff2cc';
+      if (text === '—') return '#eeeeee';
       return '#fffdf8';
     });
   });
@@ -204,7 +249,7 @@ function rebuildSummary_(ss) {
   summary.setColumnWidth(2, 360);
 
   for (let c = 3; c <= totalColumns; c++) {
-    summary.setColumnWidth(c, 130);
+    summary.setColumnWidth(c, 150);
   }
 
   ss.setActiveSheet(summary);
