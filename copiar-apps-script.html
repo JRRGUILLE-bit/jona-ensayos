@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Copiar Apps Script — Jona</title>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#101815;color:#17211d}.wrap{max-width:900px;margin:0 auto;padding:24px}.card{background:#f4efe6;border-radius:24px;padding:24px;box-shadow:0 18px 45px rgba(0,0,0,.25)}h1{margin:0 0 8px;font-size:34px;letter-spacing:-.04em}p{color:#607068;line-height:1.45}.btn{border:0;border-radius:999px;background:#24584d;color:white;font-weight:900;padding:14px 18px;cursor:pointer;font-size:16px}.status{font-weight:800;margin-left:10px;color:#24584d}textarea{width:100%;height:55vh;margin-top:18px;border:1px solid #d8cbb8;border-radius:16px;padding:14px;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:#fffdf8;color:#17211d;white-space:pre}.steps{background:#fffdf8;border:1px solid #d8cbb8;border-radius:16px;padding:14px;margin-top:16px}.steps p{margin:6px 0;color:#17211d;font-weight:750}@media(max-width:700px){.wrap{padding:12px}.card{padding:18px;border-radius:20px}h1{font-size:28px}.btn{width:100%;margin-bottom:8px}.status{display:block;margin-left:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+<h1>Apps Script — Jona</h1>
+<p>Este botón copia el código correcto para pegar en <strong>Code.gs</strong>. No hay que tocar la repo.</p>
+<button class="btn" id="copy">Copiar código completo</button><span class="status" id="status">Cargando código...</span>
+<div class="steps">
+<p>Después: Apps Script → Code.gs → Ctrl+A → Ctrl+V → Save project.</p>
+<p>Luego: Deploy → Manage deployments → lápiz → Version: New version → Deploy.</p>
+</div>
+<textarea id="code" spellcheck="false" readonly></textarea>
+</div>
+</div>
+<script>
+const codeBox=document.getElementById('code');
+const statusEl=document.getElementById('status');
+fetch('apps-script.gs?cache=' + Date.now()).then(r=>r.text()).then(t=>{codeBox.value=t;statusEl.textContent='Código cargado.'}).catch(()=>{statusEl.textContent='No pude cargar el código. Abrí apps-script.gs directamente.'});
+document.getElementById('copy').onclick=async()=>{
+  try{
+    await navigator.clipboard.writeText(codeBox.value);
+    statusEl.textContent='Copiado. Pegalo en Code.gs.';
+  }catch(e){
+    codeBox.focus();
+    codeBox.select();
+    statusEl.textContent='Seleccionado. Usá Ctrl+C.';
+  }
+};
+</script>
+</body>
+</html>
