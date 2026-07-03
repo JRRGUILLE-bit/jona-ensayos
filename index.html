@@ -10,76 +10,28 @@
 </style>
 </head>
 <body>
-<div class="wrap">
-<header class="hero">
-<div class="kicker">Jona · ensayos</div>
-<h1>Disponibilidad de actores</h1>
-<p>Elegí tu personaje y se van a mostrar solo los ensayos que corresponden a ese personaje. Después marcá puedo o no puedo.</p>
-<div class="notice" id="setupNotice">Todavía falta conectar la Google Sheet de respuestas. Igual se puede probar y copiar el resumen.</div>
-</header>
-<form id="form" class="panel">
-<section class="section grid">
-<div class="field full"><label for="personaje">¿Cuál es tu personaje?</label><select id="personaje" name="personaje" required><option value="">Elegí una opción</option></select><div class="actor-hint" id="actorHint">Actor/a: —</div></div>
-<div class="field full"><label for="comentarios">Aclaraciones generales</label><textarea id="comentarios" name="comentarios" placeholder="Ej: puedo de tarde, no puedo antes de las 18, ese día llego tarde..."></textarea></div>
-</section>
-<section class="section intro"><h2>Fechas posibles</h2><p id="introText">Primero elegí personaje para ver sus ensayos.</p></section>
-<section class="section"><div class="list" id="ensayos"></div></section>
-<section class="section actions">
-<button class="primary" type="submit">Enviar disponibilidad</button>
-<button class="secondary" type="button" id="copyBtn">Copiar resumen</button>
-<span class="status" id="status"></span>
-<div class="summary" id="summaryBox"><textarea id="summary" readonly></textarea></div>
-</section>
-</form>
-<div class="foot">Las respuestas se guardarán en Google Sheets cuando esté conectada la URL del Apps Script.</div>
-</div>
+<div class="wrap"><header class="hero"><div class="kicker">Jona · ensayos</div><h1>Disponibilidad de actores</h1><p>Elegí tu personaje y se van a mostrar solo los ensayos que corresponden a ese personaje. Después marcá puedo o no puedo.</p><div class="notice" id="setupNotice">Todavía falta conectar la Google Sheet de respuestas. Igual se puede probar y copiar el resumen.</div></header><form id="form" class="panel"><section class="section grid"><div class="field full"><label for="personaje">¿Cuál es tu personaje?</label><select id="personaje" name="personaje" required><option value="">Elegí una opción</option></select><div class="actor-hint" id="actorHint">Actor/a: —</div></div><div class="field full"><label for="comentarios">Aclaraciones generales</label><textarea id="comentarios" name="comentarios" placeholder="Ej: puedo de tarde, no puedo antes de las 18, ese día llego tarde..."></textarea></div></section><section class="section intro"><h2>Fechas posibles</h2><p id="introText">Primero elegí personaje para ver sus ensayos.</p></section><section class="section"><div class="list" id="ensayos"></div></section><section class="section actions"><button class="primary" type="submit">Enviar disponibilidad</button><button class="secondary" type="button" id="copyBtn">Copiar resumen</button><span class="status" id="status"></span><div class="summary" id="summaryBox"><textarea id="summary" readonly></textarea></div></section></form><div class="foot">Las respuestas se guardarán en Google Sheets cuando esté conectada la URL del Apps Script.</div></div>
 <script>
-const GOOGLE_SCRIPT_URL = ""; // Pegar acá la URL del Apps Script cuando esté publicada.
-const personajes = [
- {actor:"Dante", personaje:"Alexis"},
- {actor:"Martín", personaje:"Negro"},
- {actor:"Maxi", personaje:"Amigo de Jona"},
- {actor:"Lucas", personaje:"Compañero de taller de Nico"},
- {actor:"Caro", personaje:"Lorena"},
- {actor:"Guille", personaje:"Jona"},
- {actor:"Tere", personaje:"Abuela"},
- {actor:"Nico", personaje:"Nico"},
- {actor:"Camilo", personaje:"Nico niño"},
- {actor:"Aún no definido", personaje:"Jona niño"}
-];
-const ensayos = [
- {id:"2026-07-13-nico",fecha:"Lunes 13 de julio",actividad:"Uno a uno con Nico",para:["Nico"]},
- {id:"2026-07-15-grupal-nico",fecha:"Miércoles 15 de julio",actividad:"Ensayo Nico + Alexis + Compañero de taller de Nico + Amigo de Jona + Negro",para:["Nico","Alexis","Compañero de taller de Nico","Amigo de Jona","Negro"]},
- {id:"2026-07-16-lorena",fecha:"Jueves 16 de julio",actividad:"Uno a uno con Lorena",para:["Lorena"]},
- {id:"2026-07-17-llamada",fecha:"Viernes 17 de julio",actividad:"Escena de la llamada — Nico + Jona",para:["Nico","Jona"]},
- {id:"2026-07-20-jona",fecha:"Lunes 20 de julio",actividad:"Uno a uno con Jona",para:["Jona"]},
- {id:"2026-07-21-nico-nino",fecha:"Martes 21 de julio",actividad:"Uno a uno con Nico niño",para:["Nico niño"]},
- {id:"2026-07-22-jona-nino",fecha:"Miércoles 22 de julio",actividad:"Uno a uno con Jona niño",para:["Jona niño"]},
- {id:"2026-07-27-abuela",fecha:"Lunes 27 de julio",actividad:"Uno a uno con Abuela",para:["Abuela"]},
- {id:"2026-07-28-ninos",fecha:"Martes 28 de julio",actividad:"Ensayo Nico niño + Jona niño",para:["Nico niño","Jona niño"]},
- {id:"2026-07-29-protas",fecha:"Miércoles 29 de julio",actividad:"Ensayo de protagonistas — Nico, Jona, Lorena y Abuela",para:["Nico","Jona","Lorena","Abuela"]},
- {id:"2026-07-31-locacion",fecha:"Viernes 31 de julio, noche en locación",actividad:"Ensayo Nico + Jona",para:["Nico","Jona"]}
-];
+const GOOGLE_SCRIPT_URL = ["https://script.google.com/macros/s/","AKfycbyDNqmuQ59zkcY1_b6vkcl-rmMtJtgZ-NZIWmbXw97gdAP1YsyMd2ca6pBSIQPh8BN1","/exec"].join("");
+const personajes=[{actor:"Dante",personaje:"Alexis"},{actor:"Martín",personaje:"Negro"},{actor:"Maxi",personaje:"Amigo de Jona"},{actor:"Lucas",personaje:"Compañero de taller de Nico"},{actor:"Caro",personaje:"Lorena"},{actor:"Guille",personaje:"Jona"},{actor:"Tere",personaje:"Abuela"},{actor:"Nico",personaje:"Nico"},{actor:"Camilo",personaje:"Nico niño"},{actor:"Aún no definido",personaje:"Jona niño"}];
+const ensayos=[{id:"2026-07-13-nico",fecha:"Lunes 13 de julio",actividad:"Uno a uno con Nico",para:["Nico"]},{id:"2026-07-15-grupal-nico",fecha:"Miércoles 15 de julio",actividad:"Ensayo Nico + Alexis + Compañero de taller de Nico + Amigo de Jona + Negro",para:["Nico","Alexis","Compañero de taller de Nico","Amigo de Jona","Negro"]},{id:"2026-07-16-lorena",fecha:"Jueves 16 de julio",actividad:"Uno a uno con Lorena",para:["Lorena"]},{id:"2026-07-17-llamada",fecha:"Viernes 17 de julio",actividad:"Escena de la llamada — Nico + Jona",para:["Nico","Jona"]},{id:"2026-07-20-jona",fecha:"Lunes 20 de julio",actividad:"Uno a uno con Jona",para:["Jona"]},{id:"2026-07-21-nico-nino",fecha:"Martes 21 de julio",actividad:"Uno a uno con Nico niño",para:["Nico niño"]},{id:"2026-07-22-jona-nino",fecha:"Miércoles 22 de julio",actividad:"Uno a uno con Jona niño",para:["Jona niño"]},{id:"2026-07-27-abuela",fecha:"Lunes 27 de julio",actividad:"Uno a uno con Abuela",para:["Abuela"]},{id:"2026-07-28-ninos",fecha:"Martes 28 de julio",actividad:"Ensayo Nico niño + Jona niño",para:["Nico niño","Jona niño"]},{id:"2026-07-29-protas",fecha:"Miércoles 29 de julio",actividad:"Ensayo de protagonistas — Nico, Jona, Lorena y Abuela",para:["Nico","Jona","Lorena","Abuela"]},{id:"2026-07-31-locacion",fecha:"Viernes 31 de julio, noche en locación",actividad:"Ensayo Nico + Jona",para:["Nico","Jona"]}];
 const opciones=["Puedo","No puedo"];
 const $=s=>document.querySelector(s);
 const personajeSelect=$("#personaje");
-personajeSelect.innerHTML += personajes.map(p=>`<option value="${p.personaje}" data-actor="${p.actor}">${p.personaje} — ${p.actor}</option>`).join("");
-function selectedActor(){return personajeSelect.selectedOptions[0]?.dataset.actor||"";}
-function selectedPersonaje(){return personajeSelect.value||"";}
-function ensayosVisibles(){const p=selectedPersonaje();return p?ensayos.filter(e=>e.para.includes(p)):[];}
-function updateActorHint(){const a=selectedActor();$("#actorHint").textContent=a?`Actor/a: ${a}`:"Actor/a: —";}
-function renderEnsayos(){const p=selectedPersonaje();const visibles=ensayosVisibles();if(!p){$("#introText").textContent="Primero elegí personaje para ver sus ensayos.";$("#ensayos").innerHTML='<div class="empty">Elegí un personaje arriba.</div>';return;}$("#introText").textContent=`Se muestran solo los ensayos que corresponden a ${p}.`;if(!visibles.length){$("#ensayos").innerHTML='<div class="empty">No hay ensayos cargados para este personaje.</div>';return;}$("#ensayos").innerHTML=visibles.map(e=>`<article class="item"><div class="item-head"><div><div class="activity">${e.actividad}</div></div><div class="date">${e.fecha}</div></div><div class="opts">${opciones.map(o=>`<label class="opt"><input type="radio" name="${e.id}" value="${o}"><span>${o}</span></label>`).join("")}</div></article>`).join("");restoreAnswers();}
-function restoreAnswers(){try{const d=JSON.parse(localStorage.getItem("jonaEnsayosDraft")||"null");if(!d)return;ensayosVisibles().forEach(e=>{const v=d.respuestas?.[e.id]?.respuesta;const el=document.querySelector(`[name="${e.id}"][value="${v}"]`);if(el)el.checked=true;});}catch(e){}}
-personajeSelect.addEventListener("change",()=>{updateActorHint();renderEnsayos();saveDraft();});
+personajeSelect.innerHTML+=personajes.map(p=>`<option value="${p.personaje}" data-actor="${p.actor}">${p.personaje} — ${p.actor}</option>`).join("");
+function selectedActor(){return personajeSelect.selectedOptions[0]?.dataset.actor||""}function selectedPersonaje(){return personajeSelect.value||""}function ensayosVisibles(){const p=selectedPersonaje();return p?ensayos.filter(e=>e.para.includes(p)):[]}function updateActorHint(){const a=selectedActor();$("#actorHint").textContent=a?`Actor/a: ${a}`:"Actor/a: —"}
+function renderEnsayos(){const p=selectedPersonaje();const visibles=ensayosVisibles();if(!p){$("#introText").textContent="Primero elegí personaje para ver sus ensayos.";$("#ensayos").innerHTML='<div class="empty">Elegí un personaje arriba.</div>';return}$("#introText").textContent=`Se muestran solo los ensayos que corresponden a ${p}.`;if(!visibles.length){$("#ensayos").innerHTML='<div class="empty">No hay ensayos cargados para este personaje.</div>';return}$("#ensayos").innerHTML=visibles.map(e=>`<article class="item"><div class="item-head"><div><div class="activity">${e.actividad}</div></div><div class="date">${e.fecha}</div></div><div class="opts">${opciones.map(o=>`<label class="opt"><input type="radio" name="${e.id}" value="${o}"><span>${o}</span></label>`).join("")}</div></article>`).join("");restoreAnswers()}
+function restoreAnswers(){try{const d=JSON.parse(localStorage.getItem("jonaEnsayosDraft")||"null");if(!d)return;ensayosVisibles().forEach(e=>{const v=d.respuestas?.[e.id]?.respuesta;const el=document.querySelector(`[name="${e.id}"][value="${v}"]`);if(el)el.checked=true})}catch(e){}}
+personajeSelect.addEventListener("change",()=>{updateActorHint();renderEnsayos();saveDraft()});
 if(GOOGLE_SCRIPT_URL){$("#setupNotice").style.display="none"}
-function payload(){const fd=new FormData($("#form"));const respuestas={};ensayos.forEach(e=>respuestas[e.id]={fecha:e.fecha,actividad:e.actividad,respuesta:fd.get(e.id)||""});return{timestamp:new Date().toISOString(),personaje:fd.get("personaje")||"",actor:selectedActor(),comentarios:fd.get("comentarios")||"",respuestas};}
-function makeSummary(p){let out=`Disponibilidad ensayos Jona\nPersonaje: ${p.personaje}\nActor/a: ${p.actor||"-"}\n\n`;let count=0;ensayosVisibles().forEach(e=>{const r=p.respuestas[e.id].respuesta;if(r){count++;out+=`${e.fecha} — ${e.actividad}: ${r}\n`;}});if(!count)out+=`No marcó ninguna fecha.\n`;out+=`\nAclaraciones: ${p.comentarios||"-"}`;return out;}
-function saveDraft(){localStorage.setItem("jonaEnsayosDraft",JSON.stringify(payload()));}
+function payload(){const fd=new FormData($("#form"));const respuestas={};ensayos.forEach(e=>respuestas[e.id]={fecha:e.fecha,actividad:e.actividad,respuesta:fd.get(e.id)||""});return{timestamp:new Date().toISOString(),personaje:fd.get("personaje")||"",actor:selectedActor(),comentarios:fd.get("comentarios")||"",respuestas}}
+function makeSummary(p){let out=`Disponibilidad ensayos Jona\nPersonaje: ${p.personaje}\nActor/a: ${p.actor||"-"}\n\n`;let count=0;ensayosVisibles().forEach(e=>{const r=p.respuestas[e.id].respuesta;if(r){count++;out+=`${e.fecha} — ${e.actividad}: ${r}\n`}});if(!count)out+=`No marcó ninguna fecha.\n`;out+=`\nAclaraciones: ${p.comentarios||"-"}`;return out}
+function saveDraft(){localStorage.setItem("jonaEnsayosDraft",JSON.stringify(payload()))}
 $("#copyBtn").onclick=async()=>{const p=payload();const txt=makeSummary(p);$("#summary").value=txt;$("#summaryBox").style.display="block";try{await navigator.clipboard.writeText(txt);$("#status").textContent="Resumen copiado";$("#status").className="status ok"}catch(e){$("#status").textContent="Resumen generado abajo";$("#status").className="status"}};
 $("#form").addEventListener("change",saveDraft);$("#form").addEventListener("input",saveDraft);
-try{const d=JSON.parse(localStorage.getItem("jonaEnsayosDraft")||"null");if(d){$("#personaje").value=d.personaje||"";updateActorHint();$("#comentarios").value=d.comentarios||"";renderEnsayos();}}catch(e){renderEnsayos();}
+try{const d=JSON.parse(localStorage.getItem("jonaEnsayosDraft")||"null");if(d){$("#personaje").value=d.personaje||"";updateActorHint();$("#comentarios").value=d.comentarios||"";renderEnsayos()}}catch(e){renderEnsayos()}
 if(!selectedPersonaje())renderEnsayos();
-$("#form").onsubmit=async ev=>{ev.preventDefault();const p=payload();if(!p.personaje){$("#status").textContent="Elegí personaje primero";$("#status").className="status err";return;}if(!GOOGLE_SCRIPT_URL){$("#status").textContent="Falta conectar la Google Sheet";$("#status").className="status err";$("#copyBtn").click();return;}$("#status").textContent="Enviando...";$("#status").className="status";try{await fetch(GOOGLE_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(p)});localStorage.removeItem("jonaEnsayosDraft");$("#status").textContent="Enviado";$("#status").className="status ok";$("#form").reset();updateActorHint();renderEnsayos();}catch(e){$("#status").textContent="No se pudo enviar. Copiá el resumen.";$("#status").className="status err";}};
+$("#form").onsubmit=async ev=>{ev.preventDefault();const p=payload();if(!p.personaje){$("#status").textContent="Elegí personaje primero";$("#status").className="status err";return}$("#status").textContent="Enviando...";$("#status").className="status";try{await fetch(GOOGLE_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(p)});localStorage.removeItem("jonaEnsayosDraft");$("#status").textContent="Enviado";$("#status").className="status ok";$("#form").reset();updateActorHint();renderEnsayos()}catch(e){$("#status").textContent="No se pudo enviar. Copiá el resumen.";$("#status").className="status err"}};
 </script>
 </body>
 </html>
