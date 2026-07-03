@@ -1,5 +1,6 @@
 const RAW_SHEET_NAME = 'Respuestas_RAW';
 const SUMMARY_SHEET_NAME = 'Resumen';
+const TRIGGER_FUNCTION_NAME = 'rebuildSummaryFromRawTrigger';
 
 const PERSONAJES = [
   { actor: 'Dante', personaje: 'Alexis' },
@@ -34,12 +35,14 @@ function doPost(e) {
   if (!e || !e.postData || !e.postData.contents) {
     ensureRawSheet_(ss);
     rebuildSummary_(ss);
+    ensureRawChangeTrigger_();
     return ContentService.createTextOutput(JSON.stringify({ ok: true, mode: 'setup' })).setMimeType(ContentService.MimeType.JSON);
   }
 
   const data = JSON.parse(e.postData.contents || '{}');
   appendRawResponse_(ss, data);
   rebuildSummary_(ss);
+  ensureRawChangeTrigger_();
 
   return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
 }
@@ -48,6 +51,7 @@ function doGet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   ensureRawSheet_(ss);
   rebuildSummary_(ss);
+  ensureRawChangeTrigger_();
   return ContentService.createTextOutput('Resumen actualizado desde Respuestas_RAW').setMimeType(ContentService.MimeType.TEXT);
 }
 
@@ -55,13 +59,33 @@ function setupNow() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   ensureRawSheet_(ss);
   rebuildSummary_(ss);
+  ensureRawChangeTrigger_();
+}
+
+function rebuildSummaryFromRawTrigger(e) {
+  if (!e || !e.changeType) return;
+  rebuildSummary_(SpreadsheetApp.getActiveSpreadsheet());
 }
 
 function onEdit(e) {
   if (!e || !e.range) return;
   const sheet = e.range.getSheet();
-  if (sheet.getName() === RAW_SHEET_NAME && e.range.getRow() > 1) {
+  if (sheet.getName() === RAW_SHEET_NAME) {
     rebuildSummary_(SpreadsheetApp.getActiveSpreadsheet());
+  }
+}
+
+function ensureRawChangeTrigger_() {
+  const triggers = ScriptApp.getProjectTriggers();
+  const exists = triggers.some(function(trigger) {
+    return trigger.getHandlerFunction() === TRIGGER_FUNCTION_NAME;
+  });
+
+  if (!exists) {
+    ScriptApp.newTrigger(TRIGGER_FUNCTION_NAME)
+      .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+      .onChange()
+      .create();
   }
 }
 
