@@ -20,8 +20,7 @@
 <form id="form" class="panel">
 <section class="section grid">
 <div class="field full"><label for="personaje">¿Cuál es tu personaje?</label><select id="personaje" name="personaje" required><option value="">Elegí una opción</option></select><div class="actor-hint" id="actorHint">Actor/a: —</div></div>
-<div class="field"><label for="contacto">Contacto</label><input id="contacto" name="contacto" placeholder="WhatsApp o mail"></div>
-<div class="field"><label for="comentarios">Aclaraciones generales</label><textarea id="comentarios" name="comentarios" placeholder="Ej: puedo de tarde, no puedo antes de las 18, ese día llego tarde..."></textarea></div>
+<div class="field full"><label for="comentarios">Aclaraciones generales</label><textarea id="comentarios" name="comentarios" placeholder="Ej: puedo de tarde, no puedo antes de las 18, ese día llego tarde..."></textarea></div>
 </section>
 <section class="section intro"><h2>Fechas posibles</h2><p id="introText">Primero elegí personaje para ver sus ensayos.</p></section>
 <section class="section"><div class="list" id="ensayos"></div></section>
@@ -73,12 +72,12 @@ function renderEnsayos(){const p=selectedPersonaje();const visibles=ensayosVisib
 function restoreAnswers(){try{const d=JSON.parse(localStorage.getItem("jonaEnsayosDraft")||"null");if(!d)return;ensayosVisibles().forEach(e=>{const v=d.respuestas?.[e.id]?.respuesta;const el=document.querySelector(`[name="${e.id}"][value="${v}"]`);if(el)el.checked=true;});}catch(e){}}
 personajeSelect.addEventListener("change",()=>{updateActorHint();renderEnsayos();saveDraft();});
 if(GOOGLE_SCRIPT_URL){$("#setupNotice").style.display="none"}
-function payload(){const fd=new FormData($("#form"));const respuestas={};ensayos.forEach(e=>respuestas[e.id]={fecha:e.fecha,actividad:e.actividad,respuesta:fd.get(e.id)||""});return{timestamp:new Date().toISOString(),personaje:fd.get("personaje")||"",actor:selectedActor(),contacto:fd.get("contacto")||"",comentarios:fd.get("comentarios")||"",respuestas};}
-function makeSummary(p){let out=`Disponibilidad ensayos Jona\nPersonaje: ${p.personaje}\nActor/a: ${p.actor||"-"}\nContacto: ${p.contacto||"-"}\n\n`;let count=0;ensayosVisibles().forEach(e=>{const r=p.respuestas[e.id].respuesta;if(r){count++;out+=`${e.fecha} — ${e.actividad}: ${r}\n`;}});if(!count)out+=`No marcó ninguna fecha.\n`;out+=`\nAclaraciones: ${p.comentarios||"-"}`;return out;}
+function payload(){const fd=new FormData($("#form"));const respuestas={};ensayos.forEach(e=>respuestas[e.id]={fecha:e.fecha,actividad:e.actividad,respuesta:fd.get(e.id)||""});return{timestamp:new Date().toISOString(),personaje:fd.get("personaje")||"",actor:selectedActor(),comentarios:fd.get("comentarios")||"",respuestas};}
+function makeSummary(p){let out=`Disponibilidad ensayos Jona\nPersonaje: ${p.personaje}\nActor/a: ${p.actor||"-"}\n\n`;let count=0;ensayosVisibles().forEach(e=>{const r=p.respuestas[e.id].respuesta;if(r){count++;out+=`${e.fecha} — ${e.actividad}: ${r}\n`;}});if(!count)out+=`No marcó ninguna fecha.\n`;out+=`\nAclaraciones: ${p.comentarios||"-"}`;return out;}
 function saveDraft(){localStorage.setItem("jonaEnsayosDraft",JSON.stringify(payload()));}
 $("#copyBtn").onclick=async()=>{const p=payload();const txt=makeSummary(p);$("#summary").value=txt;$("#summaryBox").style.display="block";try{await navigator.clipboard.writeText(txt);$("#status").textContent="Resumen copiado";$("#status").className="status ok"}catch(e){$("#status").textContent="Resumen generado abajo";$("#status").className="status"}};
 $("#form").addEventListener("change",saveDraft);$("#form").addEventListener("input",saveDraft);
-try{const d=JSON.parse(localStorage.getItem("jonaEnsayosDraft")||"null");if(d){$("#personaje").value=d.personaje||"";updateActorHint();$("#contacto").value=d.contacto||"";$("#comentarios").value=d.comentarios||"";renderEnsayos();}}catch(e){renderEnsayos();}
+try{const d=JSON.parse(localStorage.getItem("jonaEnsayosDraft")||"null");if(d){$("#personaje").value=d.personaje||"";updateActorHint();$("#comentarios").value=d.comentarios||"";renderEnsayos();}}catch(e){renderEnsayos();}
 if(!selectedPersonaje())renderEnsayos();
 $("#form").onsubmit=async ev=>{ev.preventDefault();const p=payload();if(!p.personaje){$("#status").textContent="Elegí personaje primero";$("#status").className="status err";return;}if(!GOOGLE_SCRIPT_URL){$("#status").textContent="Falta conectar la Google Sheet";$("#status").className="status err";$("#copyBtn").click();return;}$("#status").textContent="Enviando...";$("#status").className="status";try{await fetch(GOOGLE_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(p)});localStorage.removeItem("jonaEnsayosDraft");$("#status").textContent="Enviado";$("#status").className="status ok";$("#form").reset();updateActorHint();renderEnsayos();}catch(e){$("#status").textContent="No se pudo enviar. Copiá el resumen.";$("#status").className="status err";}};
 </script>
